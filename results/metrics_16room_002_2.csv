@@ -1,0 +1,5 @@
+map,heuristic,path_length,nodes_visited,time_seconds,optimal_cost,optimality_ratio
+16room_002_2,manhattan,3,4,4e-05,3.0,1.0
+16room_002_2,euclidean,3,4,3e-05,3.0,1.0
+16room_002_2,diagonal,3,8,5e-05,3.0,1.0
+16room_002_2,hybrid,3,4,3e-05,3.0,1.0

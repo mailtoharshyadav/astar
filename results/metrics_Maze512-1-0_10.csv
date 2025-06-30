@@ -1,0 +1,5 @@
+map,heuristic,path_length,nodes_visited,time_seconds,optimal_cost,optimality_ratio
+Maze512-1-0_10,manhattan,1,2,2e-05,1.0,1.0
+Maze512-1-0_10,euclidean,1,2,1e-05,1.0,1.0
+Maze512-1-0_10,diagonal,1,2,1e-05,1.0,1.0
+Maze512-1-0_10,hybrid,1,2,2e-05,1.0,1.0

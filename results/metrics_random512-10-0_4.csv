@@ -1,0 +1,5 @@
+map,heuristic,path_length,nodes_visited,time_seconds,optimal_cost,optimality_ratio
+random512-10-0_4,manhattan,2,3,2e-05,2.82843,0.70711
+random512-10-0_4,euclidean,2,3,3e-05,2.82843,0.70711
+random512-10-0_4,diagonal,2,3,2e-05,2.82843,0.70711
+random512-10-0_4,hybrid,2,3,2e-05,2.82843,0.70711
