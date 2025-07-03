@@ -12,6 +12,9 @@ def reconstruct_path(came_from, current):
 
 # A* pathfinding algorithm implementation
 def a_star(start, goal, grid, heuristic):
+    if grid[start[0]][start[1]] == 1 or grid[goal[0]][goal[1]] == 1:
+        return [], set()  # Start or goal is blocked
+
     open_set = []  # Priority queue of (f_score, node)
     heapq.heappush(open_set, (0, start))
     came_from = {}  # Tracks the most efficient previous step

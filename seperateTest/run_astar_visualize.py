@@ -70,12 +70,12 @@ def render_html(grid, path, visited, start, goal, out_file):
                 cell_classes[(r, c)] = 'start'
             elif (r, c) == goal:
                 cell_classes[(r, c)] = 'goal'
+            elif grid[r][c] == '@':
+                cell_classes[(r, c)] = 'wall'
             elif (r, c) in path:
                 cell_classes[(r, c)] = 'path'
             elif (r, c) in visited:
                 cell_classes[(r, c)] = 'visited'
-            elif grid[r][c] == '#':
-                cell_classes[(r, c)] = 'wall'
             else:
                 cell_classes[(r, c)] = 'empty'
 
@@ -113,12 +113,16 @@ def render_html(grid, path, visited, start, goal, out_file):
         
         f.write('</div></body></html>')
 
-    print(f"✅ HTML saved to {out_file}")
+    print(f"HTML saved to {out_file}")
 
 def main():
 
-    map= "./seperateTest/random512-10-0.map"
-    scen= "./seperateTest/random512-10-0.map.scen"
+    # map= "./seperateTest/random512-10-0.map"
+    # scen= "./seperateTest/random512-10-0.map.scen"
+
+    map= "./seperateTest/testMap.map"
+    scen= "./seperateTest/testMap.map.scen"
+
     case= 177
     heuristic="euclidean"
 
@@ -126,18 +130,19 @@ def main():
     scenarios = parse_scenario(scen)
 
     if case >= len(scenarios):
-        print(f"❌ Invalid case index: {case}")
+        print(f"Invalid case index: {case}")
         return
 
     start, goal = scenarios[case]
 
     heuristic_func = getattr(heur_module, heuristic, None)
     if not heuristic_func:
-        print(f"❌ Heuristic '{heuristic}' not found in heuristics.py")
+        print(f"Heuristic '{heuristic}' not found in heuristics.py")
         return
 
     print(f"▶ Running A* from {start} to {goal} using '{heuristic}' heuristic...")
-    path, visited = astar_module.a_star(start, goal, grid, heuristic_func)
+    converted_grid = [[1 if cell == '@' else 0 for cell in row] for row in grid]
+    path, visited = astar_module.a_star(start, goal, converted_grid, heuristic_func)
     print(f"Path length: {len(path)}  |  Visited: {len(visited)}")
 
     out_html = f"astar_case{case}_{heuristic}.html"
