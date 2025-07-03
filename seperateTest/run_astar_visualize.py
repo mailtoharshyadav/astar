@@ -119,12 +119,17 @@ def main():
 
     # map= "./seperateTest/random512-10-0.map"
     # scen= "./seperateTest/random512-10-0.map.scen"
+    mapName = "testMap"
+    case= 1
+    # heuristic="euclidean"
+    heuristic="manhattan"
+    # heuristic="diagonal"
+    # heuristic="hybrid"
 
-    map= "./seperateTest/testMap.map"
-    scen= "./seperateTest/testMap.map.scen"
 
-    case= 177
-    heuristic="euclidean"
+
+    map= f"./seperateTest/{mapName}.map"
+    scen= f"./seperateTest/{mapName}.map.scen"
 
     grid = parse_map(map)
     scenarios = parse_scenario(scen)
@@ -145,7 +150,7 @@ def main():
     path, visited = astar_module.a_star(start, goal, converted_grid, heuristic_func)
     print(f"Path length: {len(path)}  |  Visited: {len(visited)}")
 
-    out_html = f"astar_case{case}_{heuristic}.html"
+    out_html = f"./seperateTest/results/{mapName}_{case}_{heuristic}.html"
     render_html(grid, path, visited, start, goal, out_html)
 
 if __name__ == "__main__":
