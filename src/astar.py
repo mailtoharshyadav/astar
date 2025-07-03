@@ -1,3 +1,4 @@
+import math
 import heapq
 
 # Function to reconstruct the path from start to goal using the came_from dictionary
@@ -29,19 +30,21 @@ def a_star(start, goal, grid, heuristic):
             return reconstruct_path(came_from, current), visited_nodes
 
         # Explore neighbors (including diagonals)
-        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1), (-1,-1),(-1,1),(1,-1),(1,1)]:
-            neighbor = (current[0]+dx, current[1]+dy)
+        for dx, dy in [(-1,0), (1,0), (0,-1), (0,1), (-1,-1), (-1,1), (1,-1), (1,1)]:
+            neighbor = (current[0] + dx, current[1] + dy)
 
-            # Check bounds of the grid
             if 0 <= neighbor[0] < len(grid) and 0 <= neighbor[1] < len(grid[0]):
-                # Skip if neighbor is an obstacle
                 if grid[neighbor[0]][neighbor[1]] == 1:
                     continue
 
-                # Tentative g_score calculation (assuming uniform movement cost of 1)
-                tentative_g = g_score[current] + 1
+                # Prevent cutting corners through walls on diagonals
+                if dx != 0 and dy != 0:
+                    if grid[current[0] + dx][current[1]] == 1 or grid[current[0]][current[1] + dy] == 1:
+                        continue
 
-                # If this path to neighbor is better than any previous one
+                movement_cost = math.sqrt(2) if dx != 0 and dy != 0 else 1
+                tentative_g = g_score[current] + movement_cost
+
                 if neighbor not in g_score or tentative_g < g_score[neighbor]:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g
