@@ -1,3 +1,4 @@
+import math
 import time
 import numpy as np
 import pandas as pd
@@ -47,7 +48,10 @@ def run_experiment(map_name, grid, start, goal, apply_weight=False, optimal_cost
         path, visited = a_star(start, goal, g, h_func)
         duration = time.time() - start_time
 
-        actual_cost = len(path)
+        actual_cost = sum(
+            math.sqrt(2) if abs(path[i][0] - path[i-1][0]) == 1 and abs(path[i][1] - path[i-1][1]) == 1 else 1
+            for i in range(1, len(path))
+        ) if path else float("inf")
         optimality_ratio = actual_cost / optimal_cost if optimal_cost else None
 
         result = {
@@ -96,7 +100,7 @@ if __name__ == "__main__":
             scenPath = "maps/" + name + ".map.scen"
             grid = load_map_file(mapPath)
             scenarios = load_scen_file(scenPath)
-            for i, (start, goal, optimal_cost) in enumerate(scenarios[:10]):
+            for i, (start, goal, optimal_cost) in enumerate(scenarios[:3]):
                 run_experiment(f"ai_{name}_{i}", grid, start, goal, args.weights, optimal_cost, scenario_index=i+1)
 
     # Save all results to one CSV
