@@ -5,6 +5,7 @@ import importlib.util
 import os
 import sys
 from html import escape
+import time
 
 import os
 
@@ -33,7 +34,8 @@ def parse_scenario(scen_path):
     for line in lines:
         parts = line.strip().split()
         sx, sy, gx, gy = int(parts[4]), int(parts[5]), int(parts[6]), int(parts[7])
-        cases.append(((sy, sx), (gy, gx)))  # row,col format
+        benchmark = float(parts[8]) if len(parts) > 8 else None
+        cases.append(((sy, sx), (gy, gx), benchmark))  # row,col format
     return cases
 
 # Get valid neighbors (8 directions, no corner cutting)
@@ -61,7 +63,7 @@ def a_star_wrapped(start, goal, grid, heuristic):
     def wrapped_heur(pos1, pos2): return h(pos1, pos2)
     return astar_module.a_star(start, goal, grid, wrapped_heur)
 
-def render_html(grid, path, visited, start, goal, out_file):
+def render_html(grid, path, visited, start, goal, out_file, duration, path_length, visited_count, cost_total, benchmark):
     cell_classes = {}  # Map positions to CSS classes
 
     for r in range(len(grid)):
@@ -70,6 +72,8 @@ def render_html(grid, path, visited, start, goal, out_file):
                 cell_classes[(r, c)] = 'start'
             elif (r, c) == goal:
                 cell_classes[(r, c)] = 'goal'
+            elif grid[r][c] == '@' and (r, c) in visited:
+                cell_classes[(r, c)] = 'wallVisited'
             elif grid[r][c] == '@':
                 cell_classes[(r, c)] = 'wall'
             elif (r, c) in path:
@@ -100,6 +104,7 @@ def render_html(grid, path, visited, start, goal, out_file):
   .path {{ background: green; }}
   .start {{ background: blue; }}
   .goal {{ background: red; }}
+  .wallVisited {{ background: tomato; }}
 </style>
 </head>
 <body>
@@ -110,26 +115,35 @@ def render_html(grid, path, visited, start, goal, out_file):
             for c in range(len(grid[0])):
                 cls = cell_classes.get((r, c), 'empty')
                 f.write(f'<div class="cell {cls}"></div>')
-        
-        f.write('</div></body></html>')
+
+        # Add metrics below the grid
+        f.write(f'''
+</div>
+<br><br>
+<div>
+  <h3>Run Statistics</h3>
+  <ul>
+    <li><strong>Time Taken:</strong> {duration:.6f} seconds</li>
+    <li><strong>Path Length:</strong> {path_length}</li>
+    <li><strong>Nodes Visited:</strong> {visited_count}</li>
+    <li><strong>Total Cost:</strong> {cost_total:.2f}</li>
+    <li><strong>Expected Cost:</strong> {benchmark:.3f}</li>
+  </ul>
+</div>
+</body>
+</html>
+''')
 
     print(f"HTML saved to {out_file}")
 
 def main():
-
-    # map= "./seperateTest/random512-10-0.map"
-    # scen= "./seperateTest/random512-10-0.map.scen"
-    mapName = "testMap"
-    case= 1
-    # heuristic="euclidean"
-    heuristic="manhattan"
-    # heuristic="diagonal"
-    # heuristic="hybrid"
-
-
-
-    map= f"./seperateTest/{mapName}.map"
-    scen= f"./seperateTest/{mapName}.map.scen"
+    mapName = "random512-10-0"
+    # mapName = "testMap"
+    case = 177
+    # heuristic = "manhattan"
+    heuristic = "euclidean"
+    map = f"./seperateTest/{mapName}.map"
+    scen = f"./seperateTest/{mapName}.map.scen"
 
     grid = parse_map(map)
     scenarios = parse_scenario(scen)
@@ -138,20 +152,32 @@ def main():
         print(f"Invalid case index: {case}")
         return
 
-    start, goal = scenarios[case]
-
+    start, goal, benchmark = scenarios[case]
     heuristic_func = getattr(heur_module, heuristic, None)
     if not heuristic_func:
         print(f"Heuristic '{heuristic}' not found in heuristics.py")
         return
 
     print(f"▶ Running A* from {start} to {goal} using '{heuristic}' heuristic...")
+
     converted_grid = [[1 if cell == '@' else 0 for cell in row] for row in grid]
+
+    start_time = time.time()
     path, visited = astar_module.a_star(start, goal, converted_grid, heuristic_func)
-    print(f"Path length: {len(path)}  |  Visited: {len(visited)}")
+    end_time = time.time()
+
+    duration = end_time - start_time
+    path_length = len(path)
+    visited_count = len(visited)
+    cost_total = sum(cost(path[i], path[i+1]) for i in range(len(path)-1)) if path else 0
+
+    print(f"⏱ Time Taken: {duration:.6f} seconds")
+    print(f"📍 Path Length: {path_length}")
+    print(f"👣 Nodes Visited: {visited_count}")
+    print(f"💰 Optimal Cost: {cost_total:.2f}")
 
     out_html = f"./seperateTest/results/{mapName}_{case}_{heuristic}.html"
-    render_html(grid, path, visited, start, goal, out_html)
+    render_html(grid, path, visited, start, goal, out_html, duration, path_length, visited_count, cost_total, benchmark)
 
 if __name__ == "__main__":
     main()

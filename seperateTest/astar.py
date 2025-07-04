@@ -1,58 +1,62 @@
 import math
 import heapq
 
-# Function to reconstruct the path from start to goal using the came_from dictionary
+# Reconstruct path from goal to start using the came_from dictionary
 def reconstruct_path(came_from, current):
-    path = []
+    path = [current]
     while current in came_from:
-        path.append(current)
         current = came_from[current]
-    path.reverse()  # Reverse the path to get it from start to goal
+        path.append(current)
+    path.reverse()  # Reverse to get path from start to goal
     return path
 
-# A* pathfinding algorithm implementation
+# A* pathfinding algorithm for 8-directional grid movement with corner cutting prevention
 def a_star(start, goal, grid, heuristic):
     if grid[start[0]][start[1]] == 1 or grid[goal[0]][goal[1]] == 1:
         return [], set()  # Start or goal is blocked
 
-    open_set = []  # Priority queue of (f_score, node)
-    heapq.heappush(open_set, (0, start))
-    came_from = {}  # Tracks the most efficient previous step
+    open_set = []  # Priority queue of (f_score, tie_breaker, node)
+    heapq.heappush(open_set, (0, heuristic(start, goal), start))
 
-    g_score = {start: 0}  # Cost from start to the current node
-    f_score = {start: heuristic(start, goal)}  # Estimated cost from start to goal through current node
-
-    visited_nodes = set()  # Track visited nodes for analysis
+    came_from = {}  # For path reconstruction
+    g_score = {start: 0}
+    f_score = {start: heuristic(start, goal)}
+    visited_nodes = set()  # For analysis/visualization
+    closed_set = set()     # Optional: to avoid reprocessing
 
     while open_set:
-        _, current = heapq.heappop(open_set)  # Node with lowest f_score
+        _, _, current = heapq.heappop(open_set)
+
+        if current in closed_set:
+            continue
+
+        closed_set.add(current)
         visited_nodes.add(current)
 
         if current == goal:
-            # Goal reached; reconstruct and return the path
             return reconstruct_path(came_from, current), visited_nodes
 
-        # Explore neighbors (including diagonals)
         for dx, dy in [(-1,0), (1,0), (0,-1), (0,1), (-1,-1), (-1,1), (1,-1), (1,1)]:
             neighbor = (current[0] + dx, current[1] + dy)
 
+            # Check boundaries
             if 0 <= neighbor[0] < len(grid) and 0 <= neighbor[1] < len(grid[0]):
                 if grid[neighbor[0]][neighbor[1]] == 1:
-                    continue
+                    continue  # Wall
 
-                # Prevent cutting corners through walls on diagonals
+                # Prevent diagonal corner cutting
                 if dx != 0 and dy != 0:
                     if grid[current[0] + dx][current[1]] == 1 or grid[current[0]][current[1] + dy] == 1:
                         continue
 
-                movement_cost = math.sqrt(2) if dx != 0 and dy != 0 else 1
-                tentative_g = g_score[current] + movement_cost
+                move_cost = math.sqrt(2) if dx != 0 and dy != 0 else 1
+                tentative_g = g_score[current] + move_cost
 
                 if neighbor not in g_score or tentative_g < g_score[neighbor]:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g
                     f_score[neighbor] = tentative_g + heuristic(neighbor, goal)
-                    heapq.heappush(open_set, (f_score[neighbor], neighbor))
+                    heapq.heappush(open_set, (f_score[neighbor], heuristic(neighbor, goal), neighbor))
 
-    # If the goal is unreachable, return empty path and visited nodes
+    # Goal unreachable
     return [], visited_nodes
