@@ -1,5 +1,0 @@
-map,heuristic,path_length,nodes_visited,time_seconds,optimal_cost,optimality_ratio
-Map18_2,manhattan,394,1786,0.01504,1006.00418,0.39165
-Map18_2,euclidean,394,1432,0.00907,1006.00418,0.39165
-Map18_2,diagonal,394,41537,0.25586,1006.00418,0.39165
-Map18_2,hybrid,394,1354,0.01543,1006.00418,0.39165

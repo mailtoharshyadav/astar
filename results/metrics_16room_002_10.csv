@@ -1,5 +1,0 @@
-map,heuristic,path_length,nodes_visited,time_seconds,optimal_cost,optimality_ratio
-16room_002_10,manhattan,2,3,2e-05,2.41421,0.82843
-16room_002_10,euclidean,2,3,2e-05,2.41421,0.82843
-16room_002_10,diagonal,2,4,2e-05,2.41421,0.82843
-16room_002_10,hybrid,2,3,2e-05,2.41421,0.82843
