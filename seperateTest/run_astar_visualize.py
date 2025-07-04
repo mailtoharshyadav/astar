@@ -74,7 +74,7 @@ def render_html(grid, path, visited, start, goal, out_file, duration, path_lengt
                 cell_classes[(r, c)] = 'goal'
             elif grid[r][c] == '@' and (r, c) in visited:
                 cell_classes[(r, c)] = 'wallVisited'
-            elif grid[r][c] == '@':
+            elif grid[r][c] == '@' or grid[r][c] == 'T':
                 cell_classes[(r, c)] = 'wall'
             elif (r, c) in path:
                 cell_classes[(r, c)] = 'path'
@@ -137,9 +137,10 @@ def render_html(grid, path, visited, start, goal, out_file, duration, path_lengt
     print(f"HTML saved to {out_file}")
 
 def main():
-    mapName = "random512-10-0"
-    # mapName = "testMap"
-    case = 177
+    # mapName = "random512-10-0"
+    # mapName = "testMap2"
+    mapName = "arena"
+    case = 3
     # heuristic = "manhattan"
     heuristic = "euclidean"
     map = f"./seperateTest/{mapName}.map"
@@ -160,7 +161,7 @@ def main():
 
     print(f"▶ Running A* from {start} to {goal} using '{heuristic}' heuristic...")
 
-    converted_grid = [[1 if cell == '@' else 0 for cell in row] for row in grid]
+    converted_grid = [[1 if cell in ('@', 'T') else 0 for cell in row] for row in grid]
 
     start_time = time.time()
     path, visited = astar_module.a_star(start, goal, converted_grid, heuristic_func)
