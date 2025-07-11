@@ -21,9 +21,6 @@ then it will run and create an html file
 
 
 ———
-Notes:need to test going to multiple places for real scenarios1 -> 12 -> 5 when all dest reached
-
-////------------------------------------
 
 Data Needed	Charts/Visuals	Output
 Which heuristic works best?	All cases per heuristic	Bar graphs, heatmaps, overlays	Rankings, strengths, weaknesses

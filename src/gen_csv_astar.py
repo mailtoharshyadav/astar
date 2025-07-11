@@ -5,7 +5,7 @@ import csv
 import os
 
 # ======= CONFIG =======
-MAP_NAME = "random512-10-0"
+MAP_NAME = "maze512-1-0"
 MAP_FILE = f"./maps/{MAP_NAME}.map"
 SCEN_FILE = f"./maps/{MAP_NAME}.map.scen"
 RESULTS_CSV = f"./results/csv/{MAP_NAME}_evaluation.csv"
