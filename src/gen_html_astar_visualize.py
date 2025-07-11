@@ -6,8 +6,8 @@ import os
 import sys
 from html import escape
 import time
-
-import os
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 # Dynamically load astar.py
@@ -136,52 +136,71 @@ def render_html(grid, path, visited, start, goal, out_file, duration, path_lengt
 
     print(f"HTML saved to {out_file}")
 
+def render_heatmap(grid, visited, start, goal, out_file):
+    heatmap = np.zeros((len(grid), len(grid[0])), dtype=int)
+
+    for r, c in visited:
+        heatmap[r][c] += 1
+
+    plt.figure(figsize=(10, 8))
+    plt.imshow(heatmap, cmap='hot', interpolation='nearest')
+    plt.colorbar(label="Visit Count")
+    plt.title("A* Node Expansion Heatmap")
+    plt.scatter(start[1], start[0], c='blue', label='Start', s=50)
+    plt.scatter(goal[1], goal[0], c='red', label='Goal', s=50)
+    plt.legend()
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(out_file)
+    plt.close()
+    print(f"🔥 Heatmap saved to {out_file}")
+
 def main():
-    # mapName = "random512-10-0"
-    # mapName = "testMap2"
     mapName = "arena"
     case = 42
-    heuristic = "manhattan"
-    # heuristic = "euclidean"
-    # heuristic = "diagonal"
-    # heuristic = "hybrid"
+    heuristics = ["manhattan", "euclidean", "diagonal", "hybrid"]
 
-    map = f"./maps/{mapName}.map"
-    scen = f"./maps/{mapName}.map.scen"
+    map_path = f"./maps/{mapName}.map"
+    scen_path = f"./maps/{mapName}.map.scen"
 
-    grid = parse_map(map)
-    scenarios = parse_scenario(scen)
+    grid = parse_map(map_path)
+    scenarios = parse_scenario(scen_path)
 
     if case >= len(scenarios):
         print(f"Invalid case index: {case}")
         return
 
     start, goal, benchmark = scenarios[case]
-    heuristic_func = getattr(heur_module, heuristic, None)
-    if not heuristic_func:
-        print(f"Heuristic '{heuristic}' not found in heuristics.py")
-        return
-
-    print(f"▶ Running A* from {start} to {goal} using '{heuristic}' heuristic...")
-
     converted_grid = [[1 if cell in ('@', 'T') else 0 for cell in row] for row in grid]
 
-    start_time = time.time()
-    path, visited = astar_module.a_star(start, goal, converted_grid, heuristic_func)
-    end_time = time.time()
+    for heuristic in heuristics:
+        heuristic_func = getattr(heur_module, heuristic, None)
+        if not heuristic_func:
+            print(f"⚠️ Heuristic '{heuristic}' not found in heuristics.py")
+            continue
 
-    duration = end_time - start_time
-    path_length = len(path)
-    visited_count = len(visited)
-    cost_total = sum(cost(path[i], path[i+1]) for i in range(len(path)-1)) if path else 0
+        print(f"\n▶ Running A* from {start} to {goal} using '{heuristic}' heuristic...")
 
-    print(f"⏱ Time Taken: {duration:.6f} seconds")
-    print(f"📍 Path Length: {path_length}")
-    print(f"👣 Nodes Visited: {visited_count}")
-    print(f"💰 Optimal Cost: {cost_total:.2f}")
+        start_time = time.time()
+        path, visited = astar_module.a_star(start, goal, converted_grid, heuristic_func)
+        end_time = time.time()
 
-    out_html = f"./results/htm/{mapName}_{case}_{heuristic}.html"
-    render_html(grid, path, visited, start, goal, out_html, duration, path_length, visited_count, cost_total, benchmark)
+        duration = end_time - start_time
+        path_length = len(path)
+        visited_count = len(visited)
+        cost_total = sum(cost(path[i], path[i + 1]) for i in range(len(path) - 1)) if path else 0
+
+        print(f"⏱ Time Taken: {duration:.6f} seconds")
+        print(f"📍 Path Length: {path_length}")
+        print(f"👣 Nodes Visited: {visited_count}")
+        print(f"💰 Optimal Cost: {cost_total:.2f}")
+
+        out_html = f"./results/htm/{mapName}_{case}_{heuristic}.html"
+        out_heatmap = f"./results/heatmap/{mapName}_{case}_{heuristic}.png"
+
+        render_html(grid, path, visited, start, goal, out_html,
+                    duration, path_length, visited_count, cost_total, benchmark)
+        render_heatmap(grid, visited, start, goal, out_heatmap)
 
 if __name__ == "__main__":
     main()

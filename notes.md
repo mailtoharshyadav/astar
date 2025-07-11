@@ -25,6 +25,11 @@ Notes:need to test going to multiple places for real scenarios1 -> 12 -> 5 when 
 
 ////------------------------------------
 
-	Results
+Data Needed	Charts/Visuals	Output
+Which heuristic works best?	All cases per heuristic	Bar graphs, heatmaps, overlays	Rankings, strengths, weaknesses
 
-	1. 
+How does map structure affect it?	Cases across map types	Grouped bar charts, heatmaps	Terrain-specific behavior
+
+When does hybrid win?	Hybrid vs. others	Side-by-side charts, overlays	Situational superiority
+
+What are the trade-offs?	Time, cost error, visited	Multi-axis bar charts, scatter plots	Performance profile of each
