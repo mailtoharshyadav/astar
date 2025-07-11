@@ -5,7 +5,7 @@ import csv
 import os
 
 # ======= CONFIG =======
-MAP_NAME = "arena"
+MAP_NAME = "random512-10-0"
 MAP_FILE = f"./seperateTest/{MAP_NAME}.map"
 SCEN_FILE = f"./seperateTest/{MAP_NAME}.map.scen"
 RESULTS_CSV = f"./seperateTest/results/csv/{MAP_NAME}_evaluation.csv"

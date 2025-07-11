@@ -140,9 +140,12 @@ def main():
     # mapName = "random512-10-0"
     # mapName = "testMap2"
     mapName = "arena"
-    case = 3
-    # heuristic = "manhattan"
-    heuristic = "euclidean"
+    case = 42
+    heuristic = "manhattan"
+    # heuristic = "euclidean"
+    # heuristic = "diagonal"
+    # heuristic = "hybrid"
+
     map = f"./seperateTest/{mapName}.map"
     scen = f"./seperateTest/{mapName}.map.scen"
 
