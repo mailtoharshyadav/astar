@@ -11,12 +11,12 @@ import os
 
 
 # Dynamically load astar.py
-spec_astar = importlib.util.spec_from_file_location("astar", "seperateTest/astar.py")
+spec_astar = importlib.util.spec_from_file_location("astar", "src/astar.py")
 astar_module = importlib.util.module_from_spec(spec_astar)
 spec_astar.loader.exec_module(astar_module)
 
 # Dynamically load heuristics.py
-spec_heur = importlib.util.spec_from_file_location("heuristics", "seperateTest/heuristics.py")
+spec_heur = importlib.util.spec_from_file_location("heuristics", "src/heuristics.py")
 heur_module = importlib.util.module_from_spec(spec_heur)
 spec_heur.loader.exec_module(heur_module)
 
@@ -146,8 +146,8 @@ def main():
     # heuristic = "diagonal"
     # heuristic = "hybrid"
 
-    map = f"./seperateTest/{mapName}.map"
-    scen = f"./seperateTest/{mapName}.map.scen"
+    map = f"./maps/{mapName}.map"
+    scen = f"./maps/{mapName}.map.scen"
 
     grid = parse_map(map)
     scenarios = parse_scenario(scen)
@@ -180,7 +180,7 @@ def main():
     print(f"👣 Nodes Visited: {visited_count}")
     print(f"💰 Optimal Cost: {cost_total:.2f}")
 
-    out_html = f"./seperateTest/results/{mapName}_{case}_{heuristic}.html"
+    out_html = f"./results/htm/{mapName}_{case}_{heuristic}.html"
     render_html(grid, path, visited, start, goal, out_html, duration, path_length, visited_count, cost_total, benchmark)
 
 if __name__ == "__main__":

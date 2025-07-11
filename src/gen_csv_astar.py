@@ -6,19 +6,19 @@ import os
 
 # ======= CONFIG =======
 MAP_NAME = "random512-10-0"
-MAP_FILE = f"./seperateTest/{MAP_NAME}.map"
-SCEN_FILE = f"./seperateTest/{MAP_NAME}.map.scen"
-RESULTS_CSV = f"./seperateTest/results/csv/{MAP_NAME}_evaluation.csv"
+MAP_FILE = f"./maps/{MAP_NAME}.map"
+SCEN_FILE = f"./maps/{MAP_NAME}.map.scen"
+RESULTS_CSV = f"./results/csv/{MAP_NAME}_evaluation.csv"
 HEURISTICS = ["manhattan", "euclidean", "diagonal", "hybrid"]
 # ======================
 
 # Dynamically load astar.py
-spec_astar = importlib.util.spec_from_file_location("astar", "seperateTest/astar.py")
+spec_astar = importlib.util.spec_from_file_location("astar", "src/astar.py")
 astar_module = importlib.util.module_from_spec(spec_astar)
 spec_astar.loader.exec_module(astar_module)
 
 # Dynamically load heuristics.py
-spec_heur = importlib.util.spec_from_file_location("heuristics", "seperateTest/heuristics.py")
+spec_heur = importlib.util.spec_from_file_location("heuristics", "src/heuristics.py")
 heur_module = importlib.util.module_from_spec(spec_heur)
 spec_heur.loader.exec_module(heur_module)
 

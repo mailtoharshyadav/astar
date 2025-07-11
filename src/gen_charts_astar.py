@@ -4,8 +4,8 @@ import seaborn as sns
 
 # Load CSV data
 graph_name = "arena"
-csv_path = "./seperateTest/results/csv/arena_evaluation.csv"
-save_path = f"./seperateTest/results/img/{graph_name}/"
+csv_path = "./results/csv/arena_evaluation.csv"
+save_path = f"./results/img/{graph_name}/"
 df = pd.read_csv(csv_path)
 
 # Set plot style
