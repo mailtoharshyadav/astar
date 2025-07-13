@@ -5,9 +5,9 @@ import os
 
 # Load CSV data
 # graph_name = "arena"
-# graph_name = "maze512-1-0"
+graph_name = "maze512-1-0"
 # graph_name = "16room_002"
-graph_name = "16room_002"
+# graph_name = "16room_002"
 
 csv_path = f"./results/csv/{graph_name}_evaluation.csv"
 save_path = f"./results/img/{graph_name}/"

@@ -1,0 +1,2 @@
+case_id,heuristic,start,goal,expected_cost,actual_cost,path_length,visited_nodes,time_sec,cost_error
+0,manhattan,"(793, 381)","(889, 1724)",3122.06878,2895.71104,1534,970814,9.926185,226.35774
