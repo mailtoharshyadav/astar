@@ -10,108 +10,97 @@ This study offers empirical insights into heuristic design and presents practica
 
 ⸻
 
-2. Introduction
+Introduction
 
-Efficient and reliable path planning is a fundamental requirement in autonomous robotics, enabling agents to move from a start point to a destination while avoiding obstacles and minimizing travel cost. Among the various algorithms developed for this purpose, the A* search algorithm has become a cornerstone of modern pathfinding due to its balance between optimality and efficiency when guided by an admissible heuristic.
+Efficient path planning is essential in autonomous robotics, allowing agents to navigate from a start point to a goal while avoiding obstacles and minimizing travel cost. The A* search algorithm is widely used for this purpose due to its balance between optimality and efficiency when guided by a suitable heuristic.
 
-A*’s performance, however, is highly sensitive to the choice of heuristic function—a component that estimates the cost to reach the goal from any given node. In robotic navigation, this means the selected heuristic directly influences not only path optimality but also computational cost, node expansions, and responsiveness in real-time environments. While classic heuristics like Manhattan, Euclidean, and Chebyshev (Diagonal) have long been used in grid-based pathfinding, their effectiveness can vary widely across different map structures and terrain types.
+However, A*’s performance depends heavily on the heuristic function used, which estimates the cost from a given node to the goal. The choice of heuristic impacts not only path quality but also computational cost and speed—key concerns in real-time robotic systems. Common heuristics like Manhattan, Euclidean, and Chebyshev are popular in grid-based environments, but their effectiveness can vary across different map types and terrain conditions.
 
-To explore these dynamics, this study implements and evaluates multiple heuristics across a suite of test environments:
-	•	Binary grid maps: including open arenas, dense random fields, partitioned room-like spaces, and tight mazes.
-	•	Weighted multi-terrain maps: such as Map18 from the Moving AI benchmark, where terrain traversal cost varies by region, simulating roads, grass, or uneven terrain.
+This study evaluates these heuristics on two types of maps:
+	•	Binary grid maps: including open spaces, random obstacles, and maze-like structures, based on standard Moving AI Lab maps.
+	•	Weighted multi-terrain maps: such as Map18, where movement costs vary to simulate real-world terrain.
 
-A novel Hybrid heuristic—a weighted combination of Manhattan and Euclidean functions—is also introduced, designed to bridge the gap between speed and accuracy.
+A custom Hybrid heuristic, combining Manhattan and Euclidean distances, is also introduced to balance speed and accuracy.
 
-The goal of this paper is to provide an empirical study of how different heuristics perform across diverse map structures, with a focus on robotic applicability. By analyzing metrics such as path length, nodes expanded, execution time, and cost deviation, the study offers guidance for selecting or designing heuristics tailored to specific robotic use cases—be it warehouse automation, terrain navigation, or real-time delivery.
+The paper aims to analyze how these heuristics perform across diverse environments, using metrics like path length, execution time, and nodes expanded. The findings offer practical guidance for choosing effective heuristics in real-world robotic applications.
 
-⸻
-
-
-⸻
 
 3. Related Work
 
-The A* algorithm was first introduced by Hart, Nilsson, and Raphael (1968) and remains a foundational technique for graph-based pathfinding. Its ability to guarantee optimality when using an admissible heuristic has made it a standard in fields such as robotics, video games, and AI planning. In robotic systems, A* is often employed for local and global navigation in grid-based maps, with its performance highly sensitive to the choice of heuristic function.
+Related Work
 
-Manhattan and Euclidean heuristics are among the most commonly used. Manhattan distance is ideal for scenarios constrained to four-directional movement, while Euclidean distance approximates realistic motion more accurately in 8-directional or continuous spaces. Chebyshev distance (Diagonal heuristic) further accommodates diagonal movement with uniform cost assumptions.
+The A* algorithm was first introduced by Hart, Nilsson, and Raphael (1968) and remains a foundational technique for graph-based pathfinding. Its ability to guarantee optimality when using an admissible heuristic has made it a standard in fields such as robotics, video games, and AI planning. In robotic systems, A* is often employed for both local and global navigation in grid-based maps, with its performance being highly dependent on the choice of heuristic function.
 
-Recent studies have explored ways to improve heuristic accuracy and adaptability. These include hybrid heuristics, weighted heuristics (e.g., weighted A*), and learning-based approaches that tailor the heuristic based on environment features. Notably, context-sensitive heuristics—which adjust based on map topology—have shown promise in dynamically improving A* performance without compromising completeness or admissibility. This paper builds on this foundation by implementing a simple hybrid heuristic and evaluating its impact across a variety of environmental structures.
+Manhattan and Euclidean heuristics are among the most commonly used. Manhattan distance is suited for four-directional movement, while Euclidean distance better models continuous or diagonal motion. Chebyshev distance (also known as the Diagonal heuristic) further supports diagonal movement with uniform cost assumptions. These heuristics are widely used in grid-based robotic navigation, but their effectiveness can vary significantly depending on the environment.
+
+Recent research has explored improved heuristic strategies, such as hybrid heuristics, weighted A*, and learning-based methods. These include techniques that adapt heuristics based on map features or pre-training on known environments to speed up planning. While effective, such methods can require significant setup or lack flexibility in unknown or dynamic environments. In contrast, this study focuses on on-the-fly heuristic evaluation, aiming for real-time use without relying on prior map-specific training.
+
+We propose a lightweight Hybrid heuristic, combining Manhattan and Euclidean distances, and evaluate it across varied map types to provide practical insights for robotic path planning.
 
 4. Methodology
 
 4.1 Heuristic Definitions
 
 To evaluate the effect of different heuristics on A* pathfinding, four modular heuristic functions were implemented:
-	•	Manhattan Distance:
+	•	Manhattan Distance
 Suitable for 4-directional movement on grids:
 h(n) = |x_1 - x_2| + |y_1 - y_2|
-	•	Euclidean Distance:
+	•	Euclidean Distance
 Approximates straight-line travel across open areas:
 h(n) = \sqrt{(x_1 - x_2)^2 + (y_1 - y_2)^2}
-	•	Diagonal (Chebyshev) Distance:
+	•	Diagonal (Chebyshev) Distance
 Allows 8-directional uniform-cost movement:
 h(n) = \max(|x_1 - x_2|, |y_1 - y_2|)
-	•	Hybrid Heuristic:
-A linear blend of Manhattan and Euclidean heuristics:
+	•	Hybrid Heuristic
+A linear combination of Manhattan and Euclidean distances:
 h_{\text{hybrid}} = 0.5 \cdot h_{\text{Manhattan}} + 0.5 \cdot h_{\text{Euclidean}}
-Designed to balance fast computation and realistic path quality.
+Designed to balance fast computation with realistic path quality.
 
 ⸻
 
-4.2 A* Pathfinding Implementation
+4.2 A Pathfinding Implementation*
 
-The pathfinding logic was implemented in astar.py and supports both 4- and 8-directional movement models. Key features include:
-	•	Open list: A priority queue implemented with heapq, ordered by total cost f(n) = g(n) + h(n).
-	•	Closed list: Prevents revisiting expanded nodes.
-	•	Collision detection: Obstacles are treated as impassable cells.
-	•	Path tracking: Backtracking from goal to start constructs the final path.
-	•	Cost modeling: Weighted grids allow cost accumulation across variable terrain types.
+The A* pathfinding algorithm was implemented in Python and supports 8-directional movement. A priority queue manages the open list, ordered by total cost f(n) = g(n) + h(n), while a closed list avoids revisiting expanded nodes. Obstacles are modeled as impassable cells. Once the goal is reached, the path is reconstructed by backtracking from the goal to the start node. In weighted environments, the algorithm accumulates terrain-specific costs for more realistic evaluation.
 
 ⸻
 
 4.3 Metric Logging and Evaluation Tools
 
-All experiments were automated using gen_csv_astar.py, which:
-	•	Runs A* with each heuristic across all map types.
-	•	Logs results into structured CSV files.
-	•	Tracks performance metrics:
+A script was developed to run A* with each heuristic across various map types, using SCEN files from the Moving AI Benchmark to define start and goal test cases. Performance data was recorded in structured CSV files. The following metrics were tracked:
 	•	Path length
-	•	Visited nodes
+	•	Number of visited nodes (open + closed)
 	•	Execution time
-	•	Expected vs. actual cost
-	•	Time variance (error bars)
+	•	Expected vs. actual path cost (benchmarked against SCEN solutions)
+	•	Time variance across multiple runs
+
+To aid analysis, HTML-based visualizations were generated for each run:
+	•	Blue: Visited nodes
+	•	Red: Goal
+	•	Green: Final path
+	•	Black: Obstacles
+
+These visuals help explain why certain heuristics perform differently in terms of speed and path quality.
 
 ⸻
 
 4.4 Experimental Setup and Tools
 	•	Language: Python 3.x
 	•	Libraries: NumPy, Matplotlib, heapq
-	•	Hardware: Experiments were executed on a standard MacBook M2 Pro.
-	•	Map format: All maps were grid-based; black pixels represent obstacles, white pixels are traversable, and color overlays represent paths.
+	•	Hardware: MacBook M2 Pro (standard desktop use)
+	•	Map Format: All maps were grid-based and sourced from the Moving AI Lab dataset, which includes diverse environments with varying obstacle density and terrain cost. Each map type presents distinct pathfinding challenges.
 
 ⸻
 
 4.5 Map Types
 
-The following maps were used to simulate distinct navigation environments:
-	1.	Arena – Open grid with minimal obstacles.
-	2.	Random – High obstacle density.
-	3.	Room – Partitioned space resembling indoor layouts.
-	4.	Maze – Tight corridors and winding paths.
-	5.	(Visualized mlue, goal as red, and path as green)
+The following maps from the Moving AI Benchmark were used to simulate diverse navigation environments:
+	1.	Arena – Open grid with minimal obstacles
+	2.	Random – High-density, randomly placed obstacles
+	3.	Room – Partitioned space resembling indoor layouts
+	4.	Maze – Tight corridors and constrained paths
+	5.	Map18 – A large, weighted map with varying terrain costs, designed to simulate real-world navigation challenges
 
-⸻
-
-4.6 Weighted Terrain Maps (Map18 - Moving AI Benchmark)
-
-To assess performance in a realistic, large-scale, cost-sensitive environment, we incorporated Map18 from the Moving AI Benchmark. This map includes:
-	•	Variable terrain costs: Each cell has a traversal cost based on terrain type (e.g., roads, grass, forest).
-	•	High-resolution grid: Representing thousands of nodes with non-uniform cost distribution.
-	•	Real-world inspired layouts: Includes both open spaces and natural chokepoints.
-
-This map reflects more authentic robotic navigation challenges, where not all paths are equally “cheap” despite being similar in distance. While the implemented heuristics remain unaware of exact terrain weights, their structural assumptions directly impact how effectively they navigate cost variations. This setup allowed us to test generalizability beyond uniform-cost grids.
-
-All results were logged to CSV files and later visualized as bar graphs and overlays.
+All results were logged to CSV files and visualized using graphs and map overlays.
 
 5. Results
 
@@ -157,14 +146,6 @@ A tightly constrained grid of winding corridors.
 	•	Euclidean and Diagonal had higher overhead without gain in path quality.
 	•	Heuristic impact was minimal in such constrained spaces.
 
-⸻
-
-5.5 Path Overlay Visualization
-
-Overlay images (provided for arena map) demonstrated:
-	•	Manhattan created stair-step patterns and inefficient routing.
-	•	Euclidean followed smoother, direct paths.
-	•	Hybrid closely mimicked Euclidean with improved speed.
 
 ⸻
 
@@ -193,7 +174,14 @@ This section interprets performance differences across map types, focusing on th
 	•	Struggled with terrain variation in Map18, taking longer, costlier paths.
 	•	Suitable for fast approximation where exact path quality is less critical.
 
-⸻
+
+6.x Path Overlay Visualization
+
+Overlay images (provided for arena map) demonstrated:
+	•	Manhattan created stair-step patterns and inefficient routing.
+	•	Euclidean followed smoother, direct paths.
+	•	Hybrid closely mimicked Euclidean with improved speed.
+
 
 6.2 Euclidean and Diagonal Heuristics
 	•	Euclidean consistently produced the shortest paths, especially in arena, room, and Map18.
@@ -227,7 +215,7 @@ Map18	Hybrid	Best compromise in cost-aware terrain
 	•	Hybrid adapted best, staying close to optimal while keeping computational cost low.
 	•	Demonstrated that heuristic blending can generalize well to large-scale, terrain-sensitive environments.
 
-7. Conclusion and Future Work (Updated)
+7. Conclusion and Future Work 
 
 This study systematically evaluated the impact of heuristic choice on the performance of the A* pathfinding algorithm across a diverse set of environments. Four heuristics—Manhattan, Euclidean, Diagonal (Chebyshev), and a custom Hybrid heuristic—were tested on various map types, including open fields, dense obstacle layouts, maze-like grids, indoor room structures, and a realistic weighted terrain map (Map18) from the Moving AI benchmark.
 
@@ -250,6 +238,7 @@ Ultimately, the findings suggest that hybrid or adaptive heuristics offer strong
 
 Refrences ???????
 
+Redblob games??
 
 
 
