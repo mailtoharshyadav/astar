@@ -1,18 +1,31 @@
 1. Abstract
 
-Pathfinding is a fundamental requirement in autonomous robotics, and the A* algorithm remains one of the most efficient and widely adopted approaches for solving this problem. This paper explores the impact of heuristic selection on A* performance by comparing four heuristics: Manhattan, Euclidean, Diagonal (Chebyshev), and a custom Hybrid heuristic that combines Manhattan and Euclidean. These were tested across multiple map types—open arena, obstacle-dense random fields, room-like partitions, and maze-like corridors—representing realistic robotic navigation environments.
+Pathfinding is a fundamental requirement in autonomous robotics, and the A* algorithm remains one of the most efficient and widely adopted approaches for this task. This paper investigates the impact of heuristic selection on A* performance by comparing four heuristic strategies: Manhattan, Euclidean, Diagonal (Chebyshev), and a custom Hybrid heuristic combining Manhattan and Euclidean with equal weight.
 
-Performance was evaluated using key metrics including path length, computation time, node expansions, and deviation from optimal cost. Results demonstrate that Manhattan is the fastest but often leads to suboptimal paths, while Euclidean offers greater accuracy at higher computational cost. The Hybrid heuristic, weighted equally between Manhattan and Euclidean, achieves a balance by reducing path cost without significant increase in execution time. Visual path overlays further illustrate the trade-offs between heuristics. This study provides empirical insight into heuristic design for A* and proposes a direction for future work in adaptive or map-aware heuristics tailored to specific environments.
+These heuristics were tested on a diverse set of map environments, including open fields, obstacle-dense layouts, indoor-like room partitions, maze-like corridors, and a weighted multi-terrain map (Map18 from the Moving AI benchmark) that simulates real-world cost variations. For each heuristic and map, we collected detailed metrics: path length, nodes expanded, execution time, and deviation from expected cost.
+
+Results reveal that Manhattan is consistently the fastest, but often produces suboptimal paths, especially in open or diagonal-friendly maps. Euclidean and Diagonal improve path quality but at the cost of greater computational load. The Hybrid heuristic effectively balances both, offering near-optimal path length with reduced expansion overhead. In weighted terrain, it outperforms Manhattan in path quality while remaining significantly faster than Euclidean.
+
+This study offers empirical insights into heuristic design and presents practical guidance for deploying A* in varied robotic contexts, especially where trade-offs between speed, accuracy, and terrain sensitivity are critical.
 
 ⸻
 
 2. Introduction
 
-Efficient path planning is a cornerstone of autonomous mobile robotics, enabling agents to navigate complex environments to reach target destinations. The A* algorithm is a widely used solution in both academia and industry due to its balance of optimality and efficiency. However, A*’s performance heavily depends on the choice of heuristic function, which estimates the remaining cost from a node to the goal. In real-world robotics—such as warehouse automation, delivery systems, or indoor navigation—the structure of the environment can significantly impact heuristic effectiveness.
+Efficient and reliable path planning is a fundamental requirement in autonomous robotics, enabling agents to move from a start point to a destination while avoiding obstacles and minimizing travel cost. Among the various algorithms developed for this purpose, the A* search algorithm has become a cornerstone of modern pathfinding due to its balance between optimality and efficiency when guided by an admissible heuristic.
 
-While the Manhattan heuristic is well-suited for grid-based 4-directional movement and offers computational speed, it often produces longer paths when diagonal movement is allowed. Conversely, Euclidean and Diagonal heuristics offer greater accuracy in open or flexible spaces but require more node expansions and computation. This paper investigates the behavior of these heuristics across a range of map types and introduces a Hybrid heuristic that balances speed and optimality.
+A*’s performance, however, is highly sensitive to the choice of heuristic function—a component that estimates the cost to reach the goal from any given node. In robotic navigation, this means the selected heuristic directly influences not only path optimality but also computational cost, node expansions, and responsiveness in real-time environments. While classic heuristics like Manhattan, Euclidean, and Chebyshev (Diagonal) have long been used in grid-based pathfinding, their effectiveness can vary widely across different map structures and terrain types.
 
-By treating each map as a simulated robot navigation task, we explore how each heuristic performs under different spatial constraints and propose empirical guidelines for heuristic selection in robotic applications.
+To explore these dynamics, this study implements and evaluates multiple heuristics across a suite of test environments:
+	•	Binary grid maps: including open arenas, dense random fields, partitioned room-like spaces, and tight mazes.
+	•	Weighted multi-terrain maps: such as Map18 from the Moving AI benchmark, where terrain traversal cost varies by region, simulating roads, grass, or uneven terrain.
+
+A novel Hybrid heuristic—a weighted combination of Manhattan and Euclidean functions—is also introduced, designed to bridge the gap between speed and accuracy.
+
+The goal of this paper is to provide an empirical study of how different heuristics perform across diverse map structures, with a focus on robotic applicability. By analyzing metrics such as path length, nodes expanded, execution time, and cost deviation, the study offers guidance for selecting or designing heuristics tailored to specific robotic use cases—be it warehouse automation, terrain navigation, or real-time delivery.
+
+⸻
+
 
 ⸻
 
@@ -28,191 +41,214 @@ Recent studies have explored ways to improve heuristic accuracy and adaptability
 
 4.1 Heuristic Definitions
 
-To evaluate the effect of different heuristics on A* pathfinding, the following four heuristics were implemented modularly in Python:
+To evaluate the effect of different heuristics on A* pathfinding, four modular heuristic functions were implemented:
 	•	Manhattan Distance:
+Suitable for 4-directional movement on grids:
 h(n) = |x_1 - x_2| + |y_1 - y_2|
-Suitable for 4-directional movement on a grid.
 	•	Euclidean Distance:
+Approximates straight-line travel across open areas:
 h(n) = \sqrt{(x_1 - x_2)^2 + (y_1 - y_2)^2}
-Models realistic, continuous space traversal—ideal when diagonal movement is allowed.
 	•	Diagonal (Chebyshev) Distance:
+Allows 8-directional uniform-cost movement:
 h(n) = \max(|x_1 - x_2|, |y_1 - y_2|)
-Assumes uniform cost for diagonal movement.
 	•	Hybrid Heuristic:
-A linear combination of Manhattan and Euclidean distances:
+A linear blend of Manhattan and Euclidean heuristics:
 h_{\text{hybrid}} = 0.5 \cdot h_{\text{Manhattan}} + 0.5 \cdot h_{\text{Euclidean}}
-Designed to balance computational efficiency and path accuracy.
+Designed to balance fast computation and realistic path quality.
 
-These heuristics were modularized via heuristics.py, allowing flexible integration into the core A* engine.
+⸻
 
 4.2 A* Pathfinding Implementation
 
-The A* algorithm was implemented in astar.py, supporting both 4- and 8-directional movement. Key design components include:
-	•	Open list: Maintained as a min-heap using Python’s heapq, prioritizing nodes by total cost f(n) = g(n) + h(n).
-	•	Closed list: Stores visited nodes to prevent re-expansion.
-	•	Movement Model: Dependent on heuristic—Manhattan restricts to 4 directions, while others allow diagonal traversal.
-	•	Collision Handling: Obstacles were modeled as impassable cells in the binary map.
-	•	Goal Termination: The search terminates upon reaching the goal node with minimum cost.
+The pathfinding logic was implemented in astar.py and supports both 4- and 8-directional movement models. Key features include:
+	•	Open list: A priority queue implemented with heapq, ordered by total cost f(n) = g(n) + h(n).
+	•	Closed list: Prevents revisiting expanded nodes.
+	•	Collision detection: Obstacles are treated as impassable cells.
+	•	Path tracking: Backtracking from goal to start constructs the final path.
+	•	Cost modeling: Weighted grids allow cost accumulation across variable terrain types.
 
 ⸻
 
-4.3 Experimental Environment
+4.3 Metric Logging and Evaluation Tools
 
-All experiments were conducted using Python 3 on a standard CPU laptop (no GPU). Visualizations were created with Matplotlib. The automation script gen_csv_astar.py was developed to run batches of tests and log performance metrics.
-
-4.4 Map Types and Scenarios
-
-Four types of 2D grid maps were used to simulate common navigation environments:
-	1.	Arena – Sparse obstacles, mimicking open warehouse spaces.
-	2.	Random – High obstacle density, resembling urban or cluttered layouts.
-	3.	Room – Partitioned indoor-like layout with room structures.
-	4.	Maze – Narrow, winding corridors with limited valid paths.
-
-Each map is represented as a binary image:
-	•	Black: obstacles
-	•	White: free space
-	•	Blue: start point
-	•	Red: goal point
-	•	Green: final path (for visual inspection)
-
-Start and goal locations were manually placed to ensure solvability across all maps.
+All experiments were automated using gen_csv_astar.py, which:
+	•	Runs A* with each heuristic across all map types.
+	•	Logs results into structured CSV files.
+	•	Tracks performance metrics:
+	•	Path length
+	•	Visited nodes
+	•	Execution time
+	•	Expected vs. actual cost
+	•	Time variance (error bars)
 
 ⸻
 
-4.5 Evaluation Metrics
+4.4 Experimental Setup and Tools
+	•	Language: Python 3.x
+	•	Libraries: NumPy, Matplotlib, heapq
+	•	Hardware: Experiments were executed on a standard MacBook M2 Pro.
+	•	Map format: All maps were grid-based; black pixels represent obstacles, white pixels are traversable, and color overlays represent paths.
 
-The following metrics were recorded for every heuristic on every map:
-	•	Path Length: Total number of steps from start to goal.
-	•	Visited Nodes: Number of nodes expanded during search.
-	•	Execution Time: Measured using wall-clock timing per run.
-	•	Cost Deviation: Difference between expected and actual path cost.
-	•	Error Bars: For time metrics, multiple runs were used to compute variance.
+⸻
+
+4.5 Map Types
+
+The following maps were used to simulate distinct navigation environments:
+	1.	Arena – Open grid with minimal obstacles.
+	2.	Random – High obstacle density.
+	3.	Room – Partitioned space resembling indoor layouts.
+	4.	Maze – Tight corridors and winding paths.
+	5.	(Visualized mlue, goal as red, and path as green)
+
+⸻
+
+4.6 Weighted Terrain Maps (Map18 - Moving AI Benchmark)
+
+To assess performance in a realistic, large-scale, cost-sensitive environment, we incorporated Map18 from the Moving AI Benchmark. This map includes:
+	•	Variable terrain costs: Each cell has a traversal cost based on terrain type (e.g., roads, grass, forest).
+	•	High-resolution grid: Representing thousands of nodes with non-uniform cost distribution.
+	•	Real-world inspired layouts: Includes both open spaces and natural chokepoints.
+
+This map reflects more authentic robotic navigation challenges, where not all paths are equally “cheap” despite being similar in distance. While the implemented heuristics remain unaware of exact terrain weights, their structural assumptions directly impact how effectively they navigate cost variations. This setup allowed us to test generalizability beyond uniform-cost grids.
 
 All results were logged to CSV files and later visualized as bar graphs and overlays.
 
 5. Results
 
-The performance of each heuristic was evaluated across four distinct map types: arena, random, room, and maze. For each, five key metrics were collected: average path length, nodes expanded, execution time, cost deviation, and time variance (with error bars). The results highlight how heuristic choice significantly impacts A*’s behavior in different environments.
+This section presents the empirical outcomes of running A* search with each heuristic across all map types. Results are broken down by environment type, and include execution time, path length, and nodes expanded. All metrics were averaged over multiple runs.
 
 ⸻
 
 5.1 Arena Map
 
-The arena map represents a sparsely obstructed field with wide open movement areas.
-	•	Execution Time: Manhattan was the fastest, followed by Hybrid and Euclidean. Diagonal took slightly longer.
-	•	Path Length: Euclidean produced the shortest path; Manhattan’s was notably longer due to 4-direction limitation.
-	•	Visited Nodes: Manhattan expanded the fewest nodes, while Euclidean and Hybrid visited more due to diagonal reachability.
-	•	Error Bars: Minimal variance across heuristics—arena offered predictable performance.
-	•	Cost Deviation: Manhattan had the largest gap from expected cost, while Euclidean and Hybrid stayed closer.
-
-Interpretation: In open spaces, diagonal-capable heuristics are advantageous for accuracy. Manhattan is efficient but suboptimal.
+A sparse map with minimal obstacles and large open space.
+	•	Manhattan was the fastest but produced longer paths due to limited directional movement.
+	•	Euclidean and Hybrid produced shorter, more direct paths.
+	•	Diagonal was slightly slower and expanded more nodes.
+	•	Hybrid offered a good balance between speed and accuracy.
 
 ⸻
 
 5.2 Random Map
 
-This map simulates high obstacle density, with irregularly scattered blockers.
-	•	Execution Time: All heuristics performed similarly; Hybrid was slightly slower due to blended computation.
-	•	Path Length: Euclidean again offered the shortest paths. Hybrid closely matched, with Diagonal lagging slightly.
-	•	Visited Nodes: All heuristics visited a high number of nodes, reflecting map complexity. Hybrid reduced this modestly.
-	•	Cost Deviation: Hybrid and Euclidean had minimal error, while Manhattan showed higher deviation.
-
-Interpretation: In dense environments, Hybrid offers a good balance—retaining Manhattan’s speed while gaining Euclidean’s optimality.
+A cluttered map with high obstacle density.
+	•	Manhattan remained fastest but showed inefficiencies in path optimality.
+	•	Hybrid closely followed in time while achieving shorter paths.
+	•	Euclidean and Diagonal expanded more nodes and were slower.
+	•	Hybrid minimized both path cost and node expansions compared to pure heuristics.
 
 ⸻
 
 5.3 Room Map
 
-This partitioned layout features corridors and room-like structures.
-	•	Execution Time: Manhattan remained fastest; Hybrid close behind.
-	•	Path Length: Hybrid and Euclidean produced near-optimal paths. Manhattan was longer due to orthogonal bias.
-	•	Visited Nodes: Diagonal expanded the most; Hybrid reduced node expansions effectively.
-	•	Error Bars: Time variance increased due to corridor routing complexity.
-
-Interpretation: Hybrid heuristics help in semi-structured environments by minimizing both path cost and node expansions.
+A map simulating indoor room partitions and corridors.
+	•	Hybrid and Euclidean produced the most efficient paths.
+	•	Manhattan performed well on time but at the cost of longer paths.
+	•	Diagonal continued to be the most expensive in node expansions.
+	•	Hybrid reduced node overhead without sacrificing quality.
 
 ⸻
 
 5.4 Maze Map
 
-A challenging narrow-corridor map requiring tight navigation.
-	•	Execution Time: Manhattan again outperformed others in speed.
-	•	Path Length: All heuristics converged to similar values—limited path options in maze make direction less impactful.
-	•	Visited Nodes: Manhattan expanded fewer nodes due to its greedy orthogonal search.
-	•	Cost Deviation: Minimal across all heuristics—maze structure constrained route choices.
-
-Interpretation: In mazes, heuristic impact is reduced. Even basic heuristics perform comparably due to tight constraints.
+A tightly constrained grid of winding corridors.
+	•	All heuristics performed similarly in path length due to limited options.
+	•	Manhattan was fastest due to minimal expansions.
+	•	Euclidean and Diagonal had higher overhead without gain in path quality.
+	•	Heuristic impact was minimal in such constrained spaces.
 
 ⸻
 
-5.5 Path Overlay Comparison
+5.5 Path Overlay Visualization
 
-To highlight qualitative differences, visual overlays were generated for Arena map:
-	•	Manhattan produced zig-zag, stair-stepped paths, extending path length in open areas.
-	•	Euclidean followed a smoother, straight-line trajectory with diagonal moves.
-	•	Hybrid tracked closely with Euclidean while maintaining faster execution.
+Overlay images (provided for arena map) demonstrated:
+	•	Manhattan created stair-step patterns and inefficient routing.
+	•	Euclidean followed smoother, direct paths.
+	•	Hybrid closely mimicked Euclidean with improved speed.
 
-These visuals demonstrate why Manhattan, while faster, can result in inefficient navigation—especially in domains allowing free movement.
+⸻
+
+5.6 Map18 – Weighted Multi-Terrain (Moving AI Benchmark)
+
+Map18 is a high-resolution map with terrain-based cost variation.
+	•	Manhattan had the lowest execution time (~7.5s) but the longest path (~854 units).
+	•	Euclidean and Diagonal produced shorter paths (~848 units) but took longer (9–10s) and expanded ~850k–900k nodes.
+	•	Hybrid struck a middle ground:
+	•	Path length (~849 units)
+	•	Time (~8.9s)
+	•	Nodes expanded (~779k)
+
+Conclusion: In complex cost-based maps, the Hybrid heuristic achieved a strong balance, improving over Manhattan without suffering the computational cost of Diagonal.
+
 
 6. Analysis
 
-This section provides a detailed examination of how each heuristic influenced A*’s performance across different map types and what the results imply for real-world robotic navigation. The analysis draws on both quantitative metrics and visual evidence.
+This section interprets performance differences across map types, focusing on the trade-offs between speed, optimality, and computational cost.
 
 ⸻
 
-6.1 Heuristic Trade-offs
-
-The Manhattan heuristic consistently delivered the fastest execution times due to its restricted 4-directional movement model and simpler arithmetic. However, this speed came at the cost of path optimality, especially in maps like arena or room, where diagonal movement could significantly reduce path length. Visual overlays clearly show zig-zag trajectories and detours when using Manhattan in open maps.
-
-In contrast, Euclidean produced smoother and shorter paths across all map types. Its diagonal movement capability makes it ideal for navigating open fields or rooms. However, this improvement comes at the expense of increased node expansions and processing time, as seen in the random and maze maps where search space complexity is high.
-
-The Diagonal (Chebyshev) heuristic, although theoretically ideal for 8-direction movement with equal cost, often underperformed in terms of node efficiency. Its aggressive expansion in all directions led to larger search areas, making it less effective in tightly constrained environments.
+6.1 Manhattan Heuristic
+	•	Fastest execution in every test case.
+	•	Performed well in constrained spaces (e.g., maze), but poorly in open or diagonal-friendly areas.
+	•	Struggled with terrain variation in Map18, taking longer, costlier paths.
+	•	Suitable for fast approximation where exact path quality is less critical.
 
 ⸻
 
-6.2 Hybrid Heuristic Performance
-
-The Hybrid heuristic, designed as a weighted blend h = 0.5 \cdot h_{\text{Manhattan}} + 0.5 \cdot h_{\text{Euclidean}}, successfully mitigated the limitations of its parent heuristics:
-	•	It retained Manhattan’s computational simplicity while benefiting from Euclidean’s accuracy.
-	•	It showed moderate execution times across all maps, never the slowest nor the fastest.
-	•	Path length and cost deviation were consistently close to optimal.
-	•	In maps like room and random, it reduced node expansions more effectively than either parent heuristic.
-
-The hybrid’s balanced behavior suggests that blending heuristics can lead to general-purpose planning strategies suitable for a wide range of environments, especially when environmental structure is unknown or dynamic.
+6.2 Euclidean and Diagonal Heuristics
+	•	Euclidean consistently produced the shortest paths, especially in arena, room, and Map18.
+	•	Diagonal expanded the most nodes and was computationally expensive.
+	•	These heuristics excel when optimality is essential, but are costly in terms of CPU and memory usage.
 
 ⸻
 
-6.3 Environment-Specific Insights
-	•	In open spaces (arena), diagonal movement is critical. Manhattan performs poorly here, while Euclidean and Hybrid excel.
-	•	In obstacle-dense fields (random), heuristic performance converges, but Hybrid offers a slight edge by avoiding over-expansion.
-	•	In structured indoor maps (room), Hybrid reduces detours common in Manhattan without adding computational load.
-	•	In mazes, all heuristics converge in performance; constrained paths negate directional advantages, reducing the impact of heuristic design.
-
-These findings suggest that no single heuristic is best in all environments—the map structure plays a decisive role in determining which heuristic performs optimally.
+6.3 Hybrid Heuristic
+	•	Blending Manhattan and Euclidean allowed adaptive behavior:
+	•	Speed comparable to Manhattan.
+	•	Path quality comparable to Euclidean.
+	•	Outperformed pure heuristics in random and room environments.
+	•	In Map18, it achieved a solid balance between cost and speed.
 
 ⸻
 
-6.4 Visual Comparison as Justification
+6.4 Environment-Specific Heuristic Suitability
 
-The included path overlay images clearly demonstrate that:
-	•	Manhattan can take unnecessary detours around diagonal corridors or open areas.
-	•	Euclidean and Hybrid follow more natural, straight-line paths.
-	•	In environments where every movement decision matters (e.g., delivery robots or warehouse bots), even small differences in path length can impact total task efficiency.
+Map Type	Best Heuristic	Reason
+Arena	Hybrid / Euclidean	Optimal paths with fast execution
+Random	Hybrid	Reduced expansions and cost
+Room	Hybrid	Balanced corridor navigation
+Maze	Manhattan	Limited routing space favors simplicity
+Map18	Hybrid	Best compromise in cost-aware terrain
 
-7. Conclusion and Future Work
+6.5 Analysis of Map18 (Weighted Terrain)
+	•	Realistic terrain costs created a challenge for simple heuristics.
+	•	Manhattan ignored cost granularity and followed inefficient routes.
+	•	Euclidean found optimal paths but expanded too widely.
+	•	Hybrid adapted best, staying close to optimal while keeping computational cost low.
+	•	Demonstrated that heuristic blending can generalize well to large-scale, terrain-sensitive environments.
 
-This study evaluated the impact of heuristic selection on the performance of A* pathfinding across diverse map environments. Through extensive testing using Manhattan, Euclidean, Diagonal (Chebyshev), and a Hybrid heuristic, it was demonstrated that no single heuristic dominates across all scenarios. The Manhattan heuristic, while computationally fast, produced longer and less efficient paths in environments where diagonal movement was beneficial. The Euclidean heuristic consistently delivered more optimal paths but incurred higher computational costs.
+7. Conclusion and Future Work (Updated)
 
-The Hybrid heuristic, combining Manhattan and Euclidean with equal weights, emerged as a strong general-purpose solution. It balanced the speed of Manhattan with the directional flexibility of Euclidean, yielding near-optimal paths with only moderate increases in node expansions and runtime. Particularly in semi-structured or cluttered environments such as room and random, the hybrid approach provided a favorable compromise between efficiency and path quality.
+This study systematically evaluated the impact of heuristic choice on the performance of the A* pathfinding algorithm across a diverse set of environments. Four heuristics—Manhattan, Euclidean, Diagonal (Chebyshev), and a custom Hybrid heuristic—were tested on various map types, including open fields, dense obstacle layouts, maze-like grids, indoor room structures, and a realistic weighted terrain map (Map18) from the Moving AI benchmark.
 
-In the future, the research can be extended in multiple directions:
-	•	Adaptive Heuristics: Dynamically altering heuristic weights based on local map context (e.g., open vs. constrained space).
-	•	Environment-Aware Tuning: Learning the best heuristic per map type or even per region within a map.
-	•	Larger-scale and Dynamic Environments: Including moving obstacles, larger maps, or real-time re-planning scenarios.
-	•	Hardware Evaluation: Testing on embedded or mobile platforms to assess real-world execution time and resource constraints.
+The results showed that Manhattan consistently delivered the fastest execution times but often produced suboptimal paths, especially in open and terrain-variable environments. Euclidean and Diagonal heuristics generated more accurate and shorter paths but came at the cost of significantly higher node expansions and computational overhead. The Hybrid heuristic, blending Manhattan and Euclidean with equal weighting, proved to be a highly effective compromise—achieving near-optimal path quality while maintaining acceptable execution times across all map types.
 
-These extensions can further bridge the gap between theoretical pathfinding and practical robotic deployment, making navigation systems more robust, efficient, and context-aware.
+The inclusion of Map18 demonstrated the Hybrid heuristic’s generalizability to large-scale, cost-sensitive terrain. In this setting, it maintained competitive speed while avoiding the excessive expansion seen with Euclidean and Diagonal. This insight is critical for real-world applications where robots must operate in dynamic, high-cost environments such as delivery zones, rough terrain, or mixed urban spaces.
 
+⸻
+
+Future Work
+
+This project opens the door to several promising research directions:
+	•	Adaptive Heuristics: Future implementations could dynamically adjust heuristic weights based on local map structure (e.g., shifting from Manhattan in corridors to Euclidean in open areas).
+	•	Learning-Based Heuristics: Incorporating machine learning to predict optimal heuristic weightings or generate context-aware heuristics could significantly enhance planning performance.
+	•	Dynamic Environments: Testing heuristic performance in maps with moving obstacles or time-dependent cost changes would further simulate real-world conditions.
+	•	Hardware-Targeted Optimization: Evaluating performance on actual robotic hardware or embedded systems will help assess energy consumption and practical feasibility.
+	•	Terrain-Aware Heuristics: Designing heuristics that explicitly account for known terrain costs (e.g., preferring paved paths over grass) could further optimize routes in weighted graphs.
+
+Ultimately, the findings suggest that hybrid or adaptive heuristics offer strong potential for improving A* search performance in both structured and unstructured environments. As robotics systems move toward greater autonomy and contextual awareness, intelligent heuristic selection will become a key driver of navigation efficiency.
+
+Refrences ???????
 
 
 
