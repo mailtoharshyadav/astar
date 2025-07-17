@@ -4,11 +4,11 @@ import seaborn as sns
 import os
 
 graph_names = ["random512-10-0", "arena","maze512-1-0","16room_002"]
-# graph_names = ["random512-10-0"]
+# graph_names = ["arena"]
 
 # Paths
 csv_dir = "./results/csv/"
-save_path = f"./results/img/${graph_names[0]}/"
+save_path = f"./results/img/{graph_names[0]}/"
 
 if len(graph_names) > 1:
     save_path = "./results/img/combined/"
