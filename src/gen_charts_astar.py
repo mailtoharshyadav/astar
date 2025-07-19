@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-graph_names = ["random512-10-0", "arena","maze512-1-0","16room_002"]
-# graph_names = ["arena"]
+# graph_names = ["random512-10-0", "arena","maze512-1-0","16room_002"]
+graph_names = ["Map18","random512-10-0", "arena","maze512-1-0","16room_002"]
+# graph_names = ["Map18"]
 
 # Paths
 csv_dir = "./results/csv/"
@@ -12,6 +13,8 @@ save_path = f"./results/img/{graph_names[0]}/"
 
 if len(graph_names) > 1:
     save_path = "./results/img/combined/"
+if len(graph_names) > 1 and "Map18" in graph_names:
+    save_path = "./results/img/combinedWithMap18/"
 
 os.makedirs(save_path, exist_ok=True)
 
