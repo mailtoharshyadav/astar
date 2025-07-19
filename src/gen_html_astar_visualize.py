@@ -72,8 +72,6 @@ def render_html(grid, path, visited, start, goal, out_file, duration, path_lengt
                 cell_classes[(r, c)] = 'start'
             elif (r, c) == goal:
                 cell_classes[(r, c)] = 'goal'
-            elif grid[r][c] == '@' and (r, c) in visited:
-                cell_classes[(r, c)] = 'wallVisited'
             elif grid[r][c] == '@' or grid[r][c] == 'T':
                 cell_classes[(r, c)] = 'wall'
             elif (r, c) in path:

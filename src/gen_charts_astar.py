@@ -4,8 +4,8 @@ import seaborn as sns
 import os
 
 # graph_names = ["random512-10-0", "arena","maze512-1-0","16room_002"]
-graph_names = ["Map18","random512-10-0", "arena","maze512-1-0","16room_002"]
-# graph_names = ["Map18"]
+# graph_names = ["Map18","random512-10-0", "arena","maze512-1-0","16room_002"]
+graph_names = ["Map18"]
 
 # Paths
 csv_dir = "./results/csv/"
@@ -98,6 +98,8 @@ plt.xlabel("Heuristic")
 for container in plt.gca().containers:
     plt.bar_label(container, fmt="%.2f", padding=3)
 plt.legend(title="Statistic")
+y_max = path_melted["path_length"].max()
+plt.ylim(0, y_max * 1.5)
 plt.tight_layout()
 plt.savefig(save_path + "mean_median_path_length.png")
 plt.close()
